@@ -1,9 +1,18 @@
 const express = require('express')
 const app = express()
+const morgan = require('morgan')
+
 const PORT = 3001
 
-app.use(express.json())
 
+app.use(express.json())
+app.use(morgan('tiny'))
+
+
+morgan.token('object', function (req,res) {
+    return `${JSON.stringify(req.body)}`
+})
+app.use(morgan(':object'))
 
 let persons = [
     { 
@@ -61,6 +70,16 @@ const generateId = () => {
 
 app.post('/api/persons', (req,res) => {
     const body = req.body
+
+    if(!body.name){
+        return res.status(400).json({error: 'name content missing'})
+    }
+    if(!body.number){
+        return res.status(400).json({error: 'number content missing'})
+    }
+    if(persons.find(element => element.name == body.name)){
+        return res.status(400).json({error: 'Person already exists'})
+    }
 
     const aPerson = {
         id: generateId(),
